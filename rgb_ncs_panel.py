@@ -20,8 +20,8 @@ class RgbNcsPanel(bpy.types.Panel):
 
     def draw(self, context):
         self.layout.operator('rgbncs.search', icon='COLORSET_03_VEC', text='RGB to NCS')
-        self.layout.prop(bpy.context.scene.rgb_ncs_vars, 'fullinfo')
-        self.layout.prop(bpy.context.scene.rgb_ncs_vars, 'relevantslimit')
+        self.layout.prop(context.window_manager.rgb_ncs_vars, 'fullinfo')
+        self.layout.prop(context.window_manager.rgb_ncs_vars, 'relevantslimit')
 
 
 def register():
