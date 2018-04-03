@@ -50,7 +50,10 @@ class RgbNcs:
     def relevance(vector1, vector2):
         v1len2 = vector1[0] ** 2 + vector1[1] ** 2 + vector1[2] ** 2
         v2len2 = vector2[0] ** 2 + vector2[1] ** 2 + vector2[2] ** 2
-        return v1len2 / v2len2
+        relevance = v1len2 / v2len2
+        if relevance > 1:
+            relevance = v2len2 / v1len2
+        return relevance
 
     @staticmethod
     def colorsdb():
