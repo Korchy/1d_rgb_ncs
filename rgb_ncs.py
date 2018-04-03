@@ -48,6 +48,9 @@ class RgbNcs:
 
     @staticmethod
     def relevance(vector1, vector2):
+
+        # релевантность должна зависить от длины разности векторов, как в поиске
+
         v1len2 = vector1[0] ** 2 + vector1[1] ** 2 + vector1[2] ** 2
         v2len2 = vector2[0] ** 2 + vector2[1] ** 2 + vector2[2] ** 2
         relevance = v1len2 / v2len2
