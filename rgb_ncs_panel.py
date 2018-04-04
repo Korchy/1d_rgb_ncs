@@ -22,6 +22,7 @@ class RgbNcsPanel(bpy.types.Panel):
         self.layout.operator('rgbncs.search', icon='COLORSET_03_VEC', text='RGB to NCS')
         self.layout.prop(context.window_manager.rgb_ncs_vars, 'fullinfo')
         self.layout.prop(context.window_manager.rgb_ncs_vars, 'relevantslimit')
+        self.layout.operator('rgbncs.clear', icon='CANCEL', text='Clear')
 
 
 def register():

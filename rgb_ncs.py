@@ -13,6 +13,7 @@ import json
 import os
 import re
 from mathutils import Vector
+import math
 
 
 class RgbNcs:
@@ -23,9 +24,11 @@ class RgbNcs:
     colorsdatabesefile = os.path.join(os.path.dirname(__file__), 'colors.json')
     textblock = None
     rgbmask = re.compile('^\d{1,3}-\d{1,3}-\d{1,3}$')
+    relevance0 = math.sqrt(3)*255   # relevance = 0 (diagonal of the rgb-cube 255x255x255)
 
     @staticmethod
     def search(context):
+        __class__.clear(context)
         if __class__.textblock:
             for line in __class__.textblock.lines[1:]:
                 line.body += ' ' + __class__.getcolorinfo(line.body, context.window_manager.rgb_ncs_vars.relevantslimit, context.window_manager.rgb_ncs_vars.fullinfo)
@@ -40,22 +43,22 @@ class RgbNcs:
             ncss = sorted(db, key=lambda x: (rgb - Vector((x[0][0], x[0][1], x[0][2]))).length)[:limit]
             rez += ' ' * (15 - len(color)) + '| '
             for ncs in ncss:
-                rez += ' (={:<7.2%} {:03d}-{:03d}-{:03d} [{:<15}] '.format(__class__.relevance(rgb, ncs[0]), int(ncs[0][0]), int(ncs[0][1]), int(ncs[0][2]), ncs[1][0])
+                rez += ' (={:<7.2%} {:03d}-{:03d}-{:03d} [{:<15}] '.format(__class__.relevance(rgb, Vector((ncs[0][0], ncs[0][1], ncs[0][2]))), int(ncs[0][0]), int(ncs[0][1]), int(ncs[0][2]), ncs[1][0])
                 if fullinfo:
                     rez += ' {} {}'.format(ncs[1][2], '-'.join([a.zfill(3) for a in ncs[1][1].split('-')]))
                 rez += ') |'
         return rez
 
     @staticmethod
+    def clear(context):
+        if __class__.textblock:
+            for line in __class__.textblock.lines[1:]:
+                line.body = line.body[:11].strip()
+
+    @staticmethod
     def relevance(vector1, vector2):
-
-        # релевантность должна зависить от длины разности векторов, как в поиске
-
-        v1len2 = vector1[0] ** 2 + vector1[1] ** 2 + vector1[2] ** 2
-        v2len2 = vector2[0] ** 2 + vector2[1] ** 2 + vector2[2] ** 2
-        relevance = v1len2 / v2len2
-        if relevance > 1:
-            relevance = v2len2 / v1len2
+        length = (vector1 - vector2).length
+        relevance = 1 - length / __class__.relevance0
         return relevance
 
     @staticmethod

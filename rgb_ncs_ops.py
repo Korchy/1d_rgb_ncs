@@ -11,6 +11,7 @@
 import bpy
 from .rgb_ncs import RgbNcs
 
+
 class RbgNcsSearch(bpy.types.Operator):
     bl_idname = 'rgbncs.search'
     bl_label = 'Search nearest NCS'
@@ -23,9 +24,23 @@ class RbgNcsSearch(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class RbgNcsClear(bpy.types.Operator):
+    bl_idname = 'rgbncs.clear'
+    bl_label = 'Clear search results'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        textblock = RgbNcs.checktextblock(context)
+        if textblock == 'OK':
+            RgbNcs.clear(context)
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(RbgNcsSearch)
+    bpy.utils.register_class(RbgNcsClear)
 
 
 def unregister():
+    bpy.utils.unregister_class(RbgNcsClear)
     bpy.utils.unregister_class(RbgNcsSearch)
