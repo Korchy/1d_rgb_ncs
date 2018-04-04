@@ -14,32 +14,23 @@ import os
 import re
 from mathutils import Vector
 import math
-from .colors import Colors
 
 
-class RgbNcs:
+class Colors:
 
-    textblockname = 'NCS.txt'
-    emptyshablon = 'RGB ## вводные данные\t\t%\tRGB\tNCS\tHEX\tCMYC\n172-173-175\n84-84-82\n5-5-5'
-    colorsdatabase = None
-    colorsdatabesefile = os.path.join(os.path.dirname(__file__), 'colors.json')
-    textblock = None
-    rgbmask = re.compile('^\d{1,3}-\d{1,3}-\d{1,3}$')
-    relevance0 = math.sqrt(3)*255   # relevance = 0 (diagonal of the rgb-cube 255x255x255)
+    __ncsdatabase = None
+    __ncsdatabesefile = os.path.join(os.path.dirname(__file__), 'ncs.json')
+    __rgbmask = re.compile('^\d{1,3}[.-]\d{1,3}[.-]\d{1,3}$')
+    __rgbrelevance0 = math.sqrt(3)*255   # rgb colors relevance = 0 (diagonal of the rgb-cube 255x255x255)
 
     @staticmethod
-    def search(context):
-        __class__.clear(context)
-        if __class__.textblock:
-            for line in __class__.textblock.lines[1:]:
-                Colors.searchncsbyrgb(line.body.strip(), context.window_manager.rgb_ncs_vars.relevantslimit)
-                # line.body += ' ' + __class__.getcolorinfo(line.body, context.window_manager.rgb_ncs_vars.relevantslimit, context.window_manager.rgb_ncs_vars.fullinfo)
-
-    @staticmethod
-    def getcolorinfo(color, limit, fullinfo):
+    def searchncsbyrgb(rgb, limit):
         rez = ''
-        if color and __class__.rgbmask.match(color.strip()) is not None:
-            db = __class__.colorsdb()
+        if rgb and __class__.__rgbmask.match(rgb) is not None:
+            db = __class__.ncsdb()
+
+            ###
+
             rgbarr = color.split('-')
             rgb = Vector((int(rgbarr[0]), int(rgbarr[1]), int(rgbarr[2])))
             ncss = sorted(db, key=lambda x: (rgb - Vector((x[0][0], x[0][1], x[0][2]))).length)[:limit]
@@ -64,11 +55,11 @@ class RgbNcs:
         return relevance
 
     @staticmethod
-    def colorsdb():
-        if not __class__.colorsdatabase:
-            with open(__class__.colorsdatabesefile) as data:
-                __class__.colorsdatabase = json.load(data)
-        return __class__.colorsdatabase
+    def ncsdb():
+        if not __class__.__ncsdatabase:
+            with open(__class__.__ncsdatabesefile) as data:
+                __class__.__ncsdatabase = json.load(data)
+        return __class__.__ncsdatabase
 
     @staticmethod
     def checktextblock(context):
