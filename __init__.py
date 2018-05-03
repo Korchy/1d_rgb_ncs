@@ -4,8 +4,7 @@
 # GitHub
 #   https://github.com/Korchy/1d_rgb_ncs
 #
-# Version history:
-#   1.0. - Search for some nearest NCS colors from RGB value
+# __init__ dummy for convenient debug
 
 bl_info = {
     'name': 'RGB_NCS',
@@ -19,20 +18,14 @@ bl_info = {
     'description': 'RGB_NCS: Search for some nearest NCS colors from RGB value'
 }
 
-from . import rgb_ncs_panel
-from . import rgb_ncs_ops
 from . import rgb_ncs
 
 
 def register():
     rgb_ncs.register()
-    rgb_ncs_ops.register()
-    rgb_ncs_panel.register()
 
 
 def unregister():
-    rgb_ncs_panel.unregister()
-    rgb_ncs_ops.unregister()
     rgb_ncs.unregister()
 
 
