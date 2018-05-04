@@ -9,6 +9,8 @@
 #   2018.05.03 - 1.0.1. - change - combine all modules to one script (for convenient embed to 1d)
 #   2018.05.03 - 1.0.2. - improve - add graphical version
 #   2018.05.04 - 1.0.3. - change - all databases embed to script
+#   2018.05.04 - 1.0.4. - bugfix - conversion between linear rgb and real rgb
+#                           !!! attention !!! - can't set color in rgb fields of color-picker. use only HEX fields
 
 
 bl_info = {
@@ -27,6 +29,7 @@ import bpy
 import re
 from mathutils import Vector
 import copy
+import math
 
 
 class RgbNcs:
@@ -43,6 +46,7 @@ class RgbNcs:
     @staticmethod
     def search_text(context, db):
         __class__.clear(context)
+        __class__.clear_textblock(context)
         if __class__.__textblock:
             for line in __class__.__textblock.lines[1:]:
                 rez = None
@@ -98,9 +102,13 @@ class RgbNcs:
     @staticmethod
     def clear(context):
         __class__.__matches = []
+
+    @staticmethod
+    def clear_textblock(context):
         if __class__.__textblock:
             for line in __class__.__textblock.lines[1:]:
                 line.body = line.body[:11].strip()
+
 
     @staticmethod
     def checktextblock(context):
@@ -136,8 +144,8 @@ class RGB:
     __g = None
     __b = None
 
-    # __relevance0 = math.sqrt(3)*255   # rgb colors relevance = 0 when compare 2 rgb colors (diagonal of the rgb-cube 255x255x255)
-    __relevance0 = 255   # rgb colors relevance = 0 when compare 2 rgb colors (not real but more convenient for designers)
+    __relevance0 = math.sqrt(3)*255   # rgb colors relevance = 0 when compare 2 rgb colors (diagonal of the rgb-cube 255x255x255)
+    # __relevance0 = 255   # rgb colors relevance = 0 when compare 2 rgb colors (not real but more convenient for designers)
 
     def __init__(self, r, g, b):
         if isinstance(r, int) and r >= 0 and r <= 255 and isinstance(g, int) and g >= 0 and g <= 255 and isinstance(b, int) and b >= 0 and b <= 255:
@@ -145,9 +153,9 @@ class RGB:
             self.__g = g
             self.__b = b
         if isinstance(r, float) and r >= 0.0 and r <= 1.0 and isinstance(g, float) and g >= 0.0 and g <= 1.0 and isinstance(b, float) and b >= 0.0 and b <= 1.0:
-            self.__r = 255 * r
-            self.__g = 255 * g
-            self.__b = 255 * b
+            self.__r = self.__from_linear(r) * 255
+            self.__g = self.__from_linear(g) * 255
+            self.__b = self.__from_linear(b) * 255
 
     def __repr__(self):
         return "RGB({},{},{})".format(self.__r, self.__g, self.__b)
@@ -199,13 +207,30 @@ class RGB:
         return __class__.rgb_to_vector(self)
 
     @staticmethod
-    def rgb_to_unit(rgb):
-        if isinstance(rgb, RGB):
-            return [rgb.r / 255, rgb.g / 255, rgb.b / 255]
+    def __from_linear(col):
+        # col = 0...1 in linear scale (.5 = 127) -> return 0...1 in real acale (.5 = 188)
+        a = 0.055
+        if col <= 0.0031308:
+            return 12.92 * col
+        else:
+            return (1 + a) * col ** (1 / 2.4) - a
 
-    def to_unit(self):
-        return __class__.rgb_to_unit(self)
+    @staticmethod
+    def __to_linear(col):
+        # col = 0...1 in real scale (.5 = 188) -> return 0...1 in linear scale (.5 = 127)
+        a = 0.055
+        if col <= 0.04045:
+            return col / 12.92
+        else:
+            return ((col + a) / (1 + a)) ** 2.4
 
+    @staticmethod
+    def rgb_to_hex(rgb):
+        return '#{:02X}{:02X}{:02X}'.format(int(rgb.r), int(rgb.g), int(rgb.b))
+
+    @staticmethod
+    def rgb_to_linear(rgb):
+        return list(map(__class__.__to_linear, [rgb.r / 255, rgb.g / 255, rgb.b / 255]))
 
 # --- VARS ----------------------------------------------------
 
@@ -269,7 +294,7 @@ class ColorMatchTextClear(bpy.types.Operator):
     def execute(self, context):
         textblock = RgbNcs.checktextblock(context)
         if textblock == 'OK':
-            RgbNcs.clear(context)
+            RgbNcs.clear_textblock(context)
         return {'FINISHED'}
 
 
@@ -294,11 +319,12 @@ class ColorMatch(bpy.types.Operator):
         matches = RgbNcs.matches()
         for i, match in enumerate(matches):
             context.window_manager.colormatching_colors.add()
-            context.window_manager.colormatching_colors[i].dest_color[0] = match[0][0] / 255
-            context.window_manager.colormatching_colors[i].dest_color[1] = match[0][1] / 255
-            context.window_manager.colormatching_colors[i].dest_color[2] = match[0][2] / 255
+            matchcolor = RGB.rgb_to_linear(RGB.fromlist(match[0]))
+            context.window_manager.colormatching_colors[i].dest_color[0] = matchcolor[0]
+            context.window_manager.colormatching_colors[i].dest_color[1] = matchcolor[1]
+            context.window_manager.colormatching_colors[i].dest_color[2] = matchcolor[2]
         # show window
-        return context.window_manager.invoke_popup(self, width=700)
+        return context.window_manager.invoke_popup(self, width=1000)
 
     def draw(self, context):
         matches = RgbNcs.matches()
