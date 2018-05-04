@@ -11,13 +11,14 @@
 #   2018.05.04 - 1.0.3. - change - all databases embed to script
 #   2018.05.04 - 1.0.4. - bugfix - conversion between linear rgb and real rgb
 #                           !!! attention !!! - can't set color in rgb fields of color-picker. use only HEX fields
+#   2018.05.04 - 1.0.5. - improve - input value to clipboard button
 
 
 bl_info = {
     'name': 'RGB_NCS',
     'category': 'All',
     'author': 'Nikita Akimov',
-    'version': (1, 0, 4),
+    'version': (1, 0, 5),
     'blender': (2, 79, 0),
     'location': 'The 3D_View window - T-panel - the 1D tab',
     'wiki_url': 'https://github.com/Korchy/1d_rgb_ncs',
@@ -88,11 +89,13 @@ class RgbNcs:
         return rez
 
     @staticmethod
-    def matches_str(db):
+    def matches_str(context, db):
         # format for copy to clipboard
         matches_str = ''
         if __class__.__matches:
             matches_str += '%\tRGB\t'+db+'\tHEX\tCMYK\n'
+            source_rgb = RGB.fromlist(context.window_manager.rgb_ncs_vars.source_color)
+            matches_str += '=input\t' + RGB.rgb_to_str(source_rgb) + '\t\t\t\t\t' + RGB.rgb_to_hex(source_rgb) + '\n'
             for line in __class__.__matches:
                 matches_str += '{:<7.2%}\t{:03d}-{:03d}-{:03d}\t{:<15}\t'.format(line[2], int(line[0][0]), int(line[0][1]), int(line[0][2]), line[1][0])
                 matches_str += '{}\t{}'.format(line[1][3], '-'.join([a.zfill(3) for a in line[1][1].split('-')]))
@@ -229,6 +232,10 @@ class RGB:
         return '#{:02X}{:02X}{:02X}'.format(int(rgb.r), int(rgb.g), int(rgb.b))
 
     @staticmethod
+    def rgb_to_str(rgb):
+        return '{}-{}-{}'.format(int(rgb.r), int(rgb.g), int(rgb.b))
+
+    @staticmethod
     def rgb_to_linear(rgb):
         return list(map(__class__.__to_linear, [rgb.r / 255, rgb.g / 255, rgb.b / 255]))
 
@@ -361,7 +368,7 @@ class ColorMatchCopyMatchesToClipboard(bpy.types.Operator):
 
     def execute(self, context):
         # copy matches string to clipboard
-        matches_str = RgbNcs.matches_str(self.db)
+        matches_str = RgbNcs.matches_str(context, self.db)
         if matches_str:
             context.window_manager.clipboard = matches_str
         return {'FINISHED'}
