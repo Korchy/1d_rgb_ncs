@@ -147,8 +147,8 @@ class RGB:
     __g = None
     __b = None
 
-    __relevance0 = math.sqrt(3)*255   # rgb colors relevance = 0 when compare 2 rgb colors (diagonal of the rgb-cube 255x255x255)
-    # __relevance0 = 255   # rgb colors relevance = 0 when compare 2 rgb colors (not real but more convenient for designers)
+    # __relevance0 = math.sqrt(3)*255   # rgb colors relevance = 0 when compare 2 rgb colors (diagonal of the rgb-cube 255x255x255)
+    __relevance0 = 255   # rgb colors relevance = 0 when compare 2 rgb colors (not real but more convenient for designers)
 
     def __init__(self, r, g, b):
         if isinstance(r, int) and r >= 0 and r <= 255 and isinstance(g, int) and g >= 0 and g <= 255 and isinstance(b, int) and b >= 0 and b <= 255:
