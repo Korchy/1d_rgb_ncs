@@ -12,6 +12,7 @@
 #   2018.05.04 - 1.0.4. - bugfix - conversion between linear rgb and real rgb
 #                           !!! attention !!! - can't set color in rgb fields of color-picker. use only HEX fields
 #   2018.05.04 - 1.0.5. - improve - input value to clipboard button
+#   2018.05.08 - 1.0.6. - bugfix - add node issue fix (now right linear values)
 
 
 bl_info = {
@@ -396,8 +397,10 @@ class ColorMatchAddNode(bpy.types.Operator):
                         object.active_material.use_nodes = True
                     rgb_node = object.active_material.node_tree.nodes.new(type='ShaderNodeRGB')
                     rgb_node.location = (0, 0)
-                    matches = RgbNcs.matches()
-                    rgb_node.outputs[0].default_value = (matches[self.add_node_id][0][0] / 255, matches[self.add_node_id][0][1] / 255, matches[self.add_node_id][0][2] / 255, 1.0)
+                    match_color = RgbNcs.matches()[self.add_node_id][0]
+                    rgb_match_color = RGB.fromlist(match_color)
+                    rgb_match_color_linear = RGB.rgb_to_linear(rgb_match_color)
+                    rgb_node.outputs[0].default_value = (rgb_match_color_linear[0], rgb_match_color_linear[1], rgb_match_color_linear[2], 1.0)
                     added.append(object.active_material)
         return {'FINISHED'}
 
