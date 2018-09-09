@@ -2,7 +2,7 @@
 Searches the set of the nearest NCS (NCl) colors by the source RGB color.
 
 # Current Version
-1.0
+1.0.6
 
 # Functionality
 If the text block with RGB cource colors list does not exists - first pressing the "RGB to NCS" button creates that block with sample text.
