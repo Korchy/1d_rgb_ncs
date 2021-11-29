@@ -14,13 +14,14 @@
 #   2018.05.04 - 1.0.5. - improve - input value to clipboard button
 #   2018.05.08 - 1.0.6. - bugfix - add node issue fix (now right linear values)
 #   2021.11.28 - 1.0.7. - added "filter" option
+#   2021.11.28 - 1.0.8. - changed filtefing order
 
 
 bl_info = {
     'name': 'RGB_NCS',
     'category': 'All',
     'author': 'Nikita Akimov',
-    'version': (1, 0, 6),
+    'version': (1, 0, 7),
     'blender': (2, 79, 0),
     'location': 'The 3D_View window - T-panel - the 1D tab',
     'wiki_url': 'https://github.com/Korchy/1d_rgb_ncs',
@@ -476,11 +477,12 @@ class ColorDB:
     @classmethod
     def search(cls, rgb, limit, text_filter):
         rgb_vector = rgb.to_vector()
-        rez = copy.deepcopy(sorted(cls._data, key=lambda x: (rgb_vector - Vector((x[0][0], x[0][1], x[0][2]))).length)[:limit])
-        for result in rez:
-            if text_filter in result[1][0]:
+        # rez = copy.deepcopy(sorted(cls._data, key=lambda x: (rgb_vector - Vector((x[0][0], x[0][1], x[0][2]))).length)[:limit])
+        rez = copy.deepcopy(sorted(cls._data, key=lambda x: (rgb_vector - Vector((x[0][0], x[0][1], x[0][2]))).length))
+        rez_filtered = [cl for cl in rez if text_filter in cl[1][0]][:limit]
+        for result in rez_filtered:
                 result.append(RGB.relevance(rgb, RGB.fromlist(result[0])))
-        return rez
+        return rez_filtered
 
 
 class NCS_DB(ColorDB):
