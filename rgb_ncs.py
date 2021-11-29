@@ -13,6 +13,7 @@
 #                           !!! attention !!! - can't set color in rgb fields of color-picker. use only HEX fields
 #   2018.05.04 - 1.0.5. - improve - input value to clipboard button
 #   2018.05.08 - 1.0.6. - bugfix - add node issue fix (now right linear values)
+#   2021.11.28 - 1.0.7. - added "filter" option
 
 
 bl_info = {
@@ -65,16 +66,16 @@ class RgbNcs:
                     line.body += ' ' * (15 - len(line.body.strip())) + __class__.formatinfo(rez, context.window_manager.rgb_ncs_vars.fullinfo)
 
     @staticmethod
-    def search_by_rgb(context, db, rgb, limit):
+    def search_by_rgb(context, db, rgb, limit, text_filter):
         __class__.clear(context)
         if db == 'NCS':
-            __class__.__matches = NCS_DB.search(rgb, limit)
+            __class__.__matches = NCS_DB.search(rgb, limit, text_filter)
         elif db == 'RAL_C':
-            __class__.__matches = RAL_C_DB.search(rgb, limit)
+            __class__.__matches = RAL_C_DB.search(rgb, limit, text_filter)
         elif db == 'RAL_D':
-            __class__.__matches = RAL_D_DB.search(rgb, limit)
+            __class__.__matches = RAL_D_DB.search(rgb, limit, text_filter)
         elif db == 'RAL_E':
-            __class__.__matches = RAL_E_DB.search(rgb, limit)
+            __class__.__matches = RAL_E_DB.search(rgb, limit, text_filter)
 
     @staticmethod
     def formatinfo(data, fullinfo):
@@ -262,6 +263,10 @@ class RgbNcsVars(bpy.types.PropertyGroup):
         max=1.0,
         default=(0.8, 0.8, 0.8, 1.0)
     )
+    text_filter = bpy.props.StringProperty(
+        name='Filter',
+        default=''
+    )
 
 
 class DestColorItem(bpy.types.PropertyGroup):
@@ -323,7 +328,7 @@ class ColorMatch(bpy.types.Operator):
     def invoke(self, context, event):
         if not self.db:
             return '{CANCELLED}'
-        RgbNcs.search_by_rgb(context, self.db, RGB.fromlist(context.window_manager.rgb_ncs_vars.source_color), context.window_manager.rgb_ncs_vars.relevantslimit)
+        RgbNcs.search_by_rgb(context, self.db, RGB.fromlist(context.window_manager.rgb_ncs_vars.source_color), context.window_manager.rgb_ncs_vars.relevantslimit, context.window_manager.rgb_ncs_vars.text_filter)
         matches = RgbNcs.matches()
         for i, match in enumerate(matches):
             context.window_manager.colormatching_colors.add()
@@ -418,6 +423,7 @@ class RgbNcsPanel(bpy.types.Panel):
         self.layout.label('Input color:')
         self.layout.prop(context.window_manager.rgb_ncs_vars, 'source_color', text='')
         self.layout.prop(context.window_manager.rgb_ncs_vars, 'relevantslimit')
+        self.layout.prop(context.window_manager.rgb_ncs_vars, 'text_filter')
         self.layout.label('Search in library:')
         self.layout.operator('colormatch.colormatch', text='NCS').db = 'NCS'
         self.layout.operator('colormatch.colormatch', text='RAL Classic').db = 'RAL_C'
@@ -468,11 +474,12 @@ class ColorDB:
     _data = None    # [[[RGB], [NCS/RAL, CMYK (C), CMYK (U), HTML]], [...], ...]
 
     @classmethod
-    def search(cls, rgb, limit):
+    def search(cls, rgb, limit, text_filter):
         rgb_vector = rgb.to_vector()
         rez = copy.deepcopy(sorted(cls._data, key=lambda x: (rgb_vector - Vector((x[0][0], x[0][1], x[0][2]))).length)[:limit])
         for result in rez:
-            result.append(RGB.relevance(rgb, RGB.fromlist(result[0])))
+            if text_filter in result[1][0]:
+                result.append(RGB.relevance(rgb, RGB.fromlist(result[0])))
         return rez
 
 
